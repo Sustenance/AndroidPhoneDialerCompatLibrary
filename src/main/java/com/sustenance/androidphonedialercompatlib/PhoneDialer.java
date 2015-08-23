@@ -19,6 +19,7 @@ public class PhoneDialer {
     private Context context;
     private int numApps;
     private ArrayList<String> installedPhones;
+    private ArrayList<String> installedPhonesByName;
     private Phone selectedPhone = Phone.DEFAULT;
 
     public PhoneDialer(Context context, Phone selectedPhone){
@@ -29,8 +30,12 @@ public class PhoneDialer {
     public PhoneDialer(Context context){
         this.context = context;
         this.numApps = 0;
+        this.installedPhones = new ArrayList<String>();
+        this.installedPhonesByName = new ArrayList<String>();
         scanApps();
     }
+
+
 
     public boolean dial(String phoneNumber, Phone phone) {
         if (phoneNumber.length() == 10){
@@ -70,8 +75,22 @@ public class PhoneDialer {
         return false;
     }
 
-    public String[] getInstalledPhones(){
-        return (String[])installedPhones.toArray();
+    /**
+     * Use sparingly; scans through all installed apps on each call
+     * @return  An ArrayList containing the installed phone apps by package name
+     */
+    public ArrayList<String> getInstalledPhones(){
+        scanApps();
+        return this.installedPhones;
+    }
+
+    /**
+     * Use sparingly; scans through all installed apps on each call
+     * @return An ArrayList containing the installed phone apps by common name
+     */
+    public ArrayList<String> getInstalledPhonesByName() {
+        scanApps();
+        return this.installedPhonesByName;
     }
 
     /**
@@ -95,12 +114,14 @@ public class PhoneDialer {
                     String packageName = packageInfo.packageName;
                     if (supportedPackages.contains(packageName)){
                         installedPhones.add(packageName);
+                        installedPhonesByName.add(packageInfo.loadLabel(pm).toString());
                     }
 
                 }
             }
+            installedPhones.add("Default");
             java.util.Collections.sort(installedPhones);
-
+            Log.d("INSTALLED PHONES", installedPhones.toString());
         }else{
             //the number of installed applications has not changed since last scan
         }
