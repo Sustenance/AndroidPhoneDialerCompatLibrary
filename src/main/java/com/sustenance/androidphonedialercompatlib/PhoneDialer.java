@@ -21,6 +21,7 @@ public class PhoneDialer {
     private ArrayList<String> installedPhones;
     private ArrayList<String> installedPhonesByName;
     private Phone selectedPhone = Phone.DEFAULT;
+    private static List<ApplicationInfo> packages;
 
     public PhoneDialer(Context context, Phone selectedPhone){
         this(context);
@@ -35,6 +36,41 @@ public class PhoneDialer {
         scanApps();
     }
 
+    /**
+     * Helper method which converts the given common phoneName
+     * to the correct Phone enum value, then calls dial
+     * @param phoneNumber The phone number to dial
+     * @param phoneName The phone app to use for dialing by Name
+     * @return True if success
+     */
+    public boolean dialByName(String phoneNumber, String phoneName) {
+        final PackageManager pm = context.getPackageManager();
+        for(Phone phone : Phone.values()) {
+            for(ApplicationInfo packageInfo : packages) {
+                if(packageInfo.loadLabel(pm).toString().equals(phoneName) &&
+                        packageInfo.packageName.equals(phone.packageName)) {
+                    return dial(phoneNumber, phone);
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Helper method which converts the given app package name
+     * to the correct Phone enum value, then calls dial
+     * @param phoneNumber The phone number to dial
+     * @param phonePackageName The phone app to use by package name
+     * @return True if success
+     */
+    public boolean dialByPackage(String phoneNumber, String phonePackageName) {
+        for(Phone phone : Phone.values()) {
+            if(phonePackageName.equals(phone.packageName)) {
+                return dial(phoneNumber, phone);
+            }
+        }
+        return false;
+    }
 
 
     public boolean dial(String phoneNumber, Phone phone) {
@@ -100,7 +136,7 @@ public class PhoneDialer {
      */
     private void scanApps() {
         final PackageManager pm = context.getPackageManager();
-        List<ApplicationInfo> packages = pm.getInstalledApplications(PackageManager.GET_META_DATA);
+        packages = pm.getInstalledApplications(PackageManager.GET_META_DATA);
 
         if(this.numApps != packages.size()){
             this.numApps = packages.size();
@@ -122,8 +158,6 @@ public class PhoneDialer {
             installedPhones.add("Default");
             java.util.Collections.sort(installedPhones);
             Log.d("INSTALLED PHONES", installedPhones.toString());
-        }else{
-            //the number of installed applications has not changed since last scan
         }
     }
 
