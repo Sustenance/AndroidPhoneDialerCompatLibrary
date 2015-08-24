@@ -17,7 +17,7 @@ import java.util.List;
  */
 public class PhoneDialer {
     private Context context;
-    private int numApps;
+    private static int numApps;
     private ArrayList<String> installedPhones;
     private ArrayList<String> installedPhonesByName;
     private Phone selectedPhone = Phone.DEFAULT;
@@ -44,6 +44,9 @@ public class PhoneDialer {
      * @return True if success
      */
     public boolean dialByName(String phoneNumber, String phoneName) {
+        if (phoneName.equals("Default") || phoneName.equals("")){
+            return dial(phoneNumber, Phone.DEFAULT);
+        }
         final PackageManager pm = context.getPackageManager();
         for(Phone phone : Phone.values()) {
             for(ApplicationInfo packageInfo : packages) {
@@ -138,8 +141,8 @@ public class PhoneDialer {
         final PackageManager pm = context.getPackageManager();
         packages = pm.getInstalledApplications(PackageManager.GET_META_DATA);
 
-        if(this.numApps != packages.size()){
-            this.numApps = packages.size();
+        if(numApps != packages.size()){
+            numApps = packages.size();
             ArrayList<String> supportedPackages = new ArrayList<String>();
             for(int i = 0; i < Phone.values().length ; i++){
                 supportedPackages.add(Phone.values()[i].packageName);
@@ -156,8 +159,9 @@ public class PhoneDialer {
                 }
             }
             installedPhones.add("Default");
+            installedPhonesByName.add("Default");
             java.util.Collections.sort(installedPhones);
-            Log.d("INSTALLED PHONES", installedPhones.toString());
+            //Log.d("INSTALLED PHONES", installedPhones.toString());
         }
     }
 
@@ -208,8 +212,8 @@ public class PhoneDialer {
 
     public boolean talkatone(String number) {
         try {
-            Intent callTalkatone = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:+1" + number));
-            callTalkatone.setComponent(new ComponentName("com.talkatone.android", "com.talkatone.android.ui.launcher.DialInterceptor"));
+            Intent callTalkatone = new Intent(Intent.ACTION_CALL, Uri.parse("tel:+1" + number));
+            callTalkatone.setComponent(new ComponentName("com.talkatone.android", "com.talkatone.android.ui.launcher.OutgoingCallInterceptor"));
             callTalkatone.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             context.startActivity(callTalkatone);
         } catch (ActivityNotFoundException e) {
@@ -280,7 +284,7 @@ public class PhoneDialer {
 
     public boolean magicJack(String number) {
         try {
-            Intent callMagic = new Intent("android.intent.action.CALL_PRIVILEGED", Uri.parse("tel:+1" + number));
+            Intent callMagic = new Intent("android.intent.action.CALL", Uri.parse("tel:+1" + number));
             callMagic.setComponent(new ComponentName("com.magicjack", "com.magicjack.ContactsIntegrationActivity"));
             callMagic.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             context.startActivity(callMagic);
