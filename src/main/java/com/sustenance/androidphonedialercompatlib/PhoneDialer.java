@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 
 import java.util.ArrayList;
@@ -84,9 +85,10 @@ public class PhoneDialer {
      */
     public boolean dial(String phoneNumber, Phone phone) {
         phoneNumber = trimPhoneNumberLength(phoneNumber);
+        //String countryCode = GetCountryZipCode();
         if(phoneNumber.length() == 10){
             try {
-                Intent callIntent = new Intent(phone.intentAction, Uri.parse(phone.uriPrefix + phoneNumber));
+                Intent callIntent = new Intent(phone.intentAction, Uri.parse(phone.uriPrefix + phoneNumber + phone.uriPostFix));
                 if(!phone.packageName.equals("") && !phone.activityName.equals("")) {
                     callIntent.setComponent(new ComponentName(phone.packageName, phone.activityName));
                 }
@@ -109,7 +111,7 @@ public class PhoneDialer {
      * @return A phone number in a dialable format (XXXXXXXXXX)
      */
     public String trimPhoneNumberLength(String phoneNumber) {
-        phoneNumber = phoneNumber.replaceAll("-","");
+        phoneNumber = phoneNumber.replaceAll("-", "");
 
         int length = phoneNumber.length();
         if(length == 10){
@@ -120,6 +122,27 @@ public class PhoneDialer {
             Log.d("Incorrect number", "number supplied was incorrect format: " + phoneNumber);
             return phoneNumber;
         }
+    }
+
+    /**
+     * Gets the two character country code from the system, then matches it to
+     * a calling code from the strings resource file.
+     * Modified from that found here: http://stackoverflow.com/a/17266260
+     * @return The numerical country calling code
+     */
+    public String GetCountryZipCode(){
+        String CountryZipCode="";
+        String locale = context.getResources().getConfiguration().locale.getCountry();
+
+        String[] rl=this.context.getResources().getStringArray(R.array.CountryCodes);
+        for(int i=0;i<rl.length;i++){
+            String[] g=rl[i].split(",");
+            if(g[1].trim().equals(locale.trim())){
+                CountryZipCode=g[0];
+                break;
+            }
+        }
+        return CountryZipCode;
     }
 
     /**
