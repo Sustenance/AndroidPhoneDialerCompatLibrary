@@ -50,11 +50,14 @@ public class PhoneDialer {
         }
         final PackageManager pm = context.getPackageManager();
         for(Phone phone : Phone.values()) {
-            for(ApplicationInfo packageInfo : packages) {
-                if(packageInfo.loadLabel(pm).toString().equals(phoneName) &&
-                        packageInfo.packageName.equals(phone.packageName)) {
+
+            try{
+                ApplicationInfo appInfo = pm.getApplicationInfo(phone.packageName, 0);
+                if(appInfo.loadLabel(pm).toString().equals(phoneName)){
                     return dial(phoneNumber, phone);
                 }
+            }catch (PackageManager.NameNotFoundException e){
+                continue;
             }
         }
         return false;
@@ -86,7 +89,7 @@ public class PhoneDialer {
     public boolean dial(String phoneNumber, Phone phone) {
         phoneNumber = trimPhoneNumberLength(phoneNumber);
         //String countryCode = GetCountryZipCode();
-        if(phoneNumber.length() == 10){
+        if(phoneNumber.length() >= 7){
             try {
                 Intent callIntent = new Intent(phone.intentAction, Uri.parse(phone.uriPrefix + phoneNumber + phone.uriPostFix));
                 if(!phone.packageName.equals("") && !phone.activityName.equals("")) {
