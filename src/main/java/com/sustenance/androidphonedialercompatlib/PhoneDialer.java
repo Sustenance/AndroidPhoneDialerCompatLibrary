@@ -113,9 +113,9 @@ public class PhoneDialer {
      * @param phoneNumber A phone number
      * @return A phone number in a dialable format (XXXXXXXXXX)
      */
-    public String trimPhoneNumberLength(String phoneNumber) {
+    public static String trimPhoneNumberLength(String phoneNumber) {
         phoneNumber = phoneNumber.replaceAll("-", "");
-
+        phoneNumber = phoneNumber.replaceAll("/+", "");
         int length = phoneNumber.length();
         if(length == 10){
             return phoneNumber;
