@@ -7,11 +7,15 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
-import android.telephony.TelephonyManager;
+import android.os.Build;
+import android.telephony.PhoneNumberUtils;
+import android.text.Editable;
+import android.text.SpannableStringBuilder;
 import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Created by Sustenance on 8/23/15.
@@ -87,7 +91,7 @@ public class PhoneDialer {
      * @return True if success
      */
     public boolean dial(String phoneNumber, Phone phone) {
-        phoneNumber = trimPhoneNumberLength(phoneNumber);
+        phoneNumber = trimPhoneNumberLength(phoneNumber, this.context);
         //String countryCode = GetCountryZipCode();
         if(phoneNumber.length() >= 7){
             try {
@@ -107,25 +111,29 @@ public class PhoneDialer {
         return false;
     }
 
+
+
     /**
      * Ensures that the supplied phone number is trimmed of dashes and
      * is only Ten digits long
      * @param phoneNumber A phone number
      * @return A phone number in a dialable format (XXXXXXXXXX)
      */
-    public static String trimPhoneNumberLength(String phoneNumber) {
-        phoneNumber = phoneNumber.replaceAll("-", "");
-        phoneNumber = phoneNumber.replaceAll("/+", "");
-        int length = phoneNumber.length();
-        if(length == 10){
+    public static String trimPhoneNumberLength(String phoneNumber, Context context) {
+        phoneNumber = PhoneNumberUtils.stripSeparators(phoneNumber);
+        String countryCode = GetCountryZipCode(context);
+        Editable phoneNumberEditable = new SpannableStringBuilder(phoneNumber);
+
+        if(Build.VERSION.SDK_INT>=21){
+            phoneNumber =  PhoneNumberUtils.formatNumber(phoneNumber, countryCode);
             return phoneNumber;
-        }else if(length == 11 && phoneNumber.substring(0,1).equals("1")){
-            return phoneNumber.substring(1);
-        }else{
-            Log.d("Incorrect number", "number supplied was incorrect format: " + phoneNumber);
-            return phoneNumber;
+        }else {
+            PhoneNumberUtils.formatNumber(phoneNumberEditable, PhoneNumberUtils.getFormatTypeForLocale(Locale.getDefault()));
+            return phoneNumberEditable.toString();
         }
+
     }
+
 
     /**
      * Gets the two character country code from the system, then matches it to
@@ -133,11 +141,11 @@ public class PhoneDialer {
      * Modified from that found here: http://stackoverflow.com/a/17266260
      * @return The numerical country calling code
      */
-    public String GetCountryZipCode(){
+    public static String GetCountryZipCode(Context context){
         String CountryZipCode="";
         String locale = context.getResources().getConfiguration().locale.getCountry();
 
-        String[] rl=this.context.getResources().getStringArray(R.array.CountryCodes);
+        String[] rl= context.getResources().getStringArray(R.array.CountryCodes);
         for(int i=0;i<rl.length;i++){
             String[] g=rl[i].split(",");
             if(g[1].trim().equals(locale.trim())){
