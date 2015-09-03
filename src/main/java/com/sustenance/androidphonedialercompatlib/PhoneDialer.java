@@ -12,6 +12,10 @@ import android.telephony.PhoneNumberUtils;
 import android.text.Editable;
 import android.text.SpannableStringBuilder;
 import android.util.Log;
+import com.google.i18n.phonenumbers.NumberParseException;
+import com.google.i18n.phonenumbers.PhoneNumberUtil;
+import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberType;
+import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -122,14 +126,20 @@ public class PhoneDialer {
     public static String trimPhoneNumberLength(String phoneNumber, Context context) {
         phoneNumber = PhoneNumberUtils.stripSeparators(phoneNumber);
         String countryCode = GetCountryZipCode(context);
-        Editable phoneNumberEditable = new SpannableStringBuilder(phoneNumber);
-
-        if(Build.VERSION.SDK_INT>=21){
-            phoneNumber =  PhoneNumberUtils.formatNumber(phoneNumber, countryCode);
+        PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
+        PhoneNumber phoneNumberObj;
+        try {
+            phoneNumberObj = phoneNumberUtil.parse(phoneNumber, countryCode);
+        } catch (NumberParseException e) {
+            Log.e("NumberParsing", "Could not parse number");
             return phoneNumber;
+        }
+
+        String dialNumber = phoneNumberUtil.format(phoneNumberObj, PhoneNumberUtil.PhoneNumberFormat.E164);
+        if(dialNumber!=null && !dialNumber.equals("")){
+            return dialNumber;
         }else {
-            PhoneNumberUtils.formatNumber(phoneNumberEditable, PhoneNumberUtils.getFormatTypeForLocale(Locale.getDefault()));
-            return phoneNumberEditable.toString();
+            return phoneNumber;
         }
 
     }
